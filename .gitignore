@@ -1,1 +1,10 @@
 .ipynb_checkpoints
+cs231n/cs231_env
+assignment1/cs231n/datasets/cifar-10-batches-py
+gmc_stuff/complete_data.csv
+gmc_stuff/complete_data_good.csv
+gmc_stuff/complete_data_no_ok.csv
+gmc_stuff/nothing_faith.csv
+julia_playground/files
+pytorch
+julia_playground/Read\ Files.ipynb
