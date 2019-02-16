@@ -25,25 +25,38 @@ def svm_loss_naive(W, X, y, reg):
   num_classes = W.shape[1]
   num_train = X.shape[0]
   loss = 0.0
+  # for each training example, we want to find the loss and the gradient.
   for i in range(num_train):
+    # Score of each class output = Input Picture * some W matrix.
+    # f(x) = X dot W
     scores = X[i].dot(W)
+    # y[i] is the correct class, so we want to extract our model's score of that class.
     correct_class_score = scores[y[i]]
+
+    # for each class, we want to compute the SVM hinge thing, where if the
+    # score of the class is greater than some margin (1), we would add that
+    # to the loss. i.e. if the score of a wrong class is greater than 1
+    # add that to the total loss/'badness' of the data.
     for j in range(num_classes):
       if j == y[i]:
         continue
       margin = scores[j] - correct_class_score + 1 # note delta = 1
       if margin > 0:
+        # https://github.com/lightaime/cs231n/blob/master/assignment1/cs231n/classifiers/linear_svm.py
+        # not too sure how adding the image to the derivative matrix results in
+        # the overall gradient--some Matrix Calculus thing I don't understand?
         loss += margin
+        dW[:,j] += X[i].T
+        dW[:,y[i]] += -X[i].T
 
   # Right now the loss is a sum over all training examples, but we want it
   # to be an average instead so we divide by num_train.
   loss /= num_train
+  dW /= num_train
 
   # Add regularization to the loss.
   loss += reg * np.sum(W * W)
-
-
-
+  dW += reg * W
 
   #############################################################################
   # TODO:                                                                     #
