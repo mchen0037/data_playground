@@ -37,15 +37,23 @@ def svm_loss_naive(W, X, y, reg):
     # score of the class is greater than some margin (1), we would add that
     # to the loss. i.e. if the score of a wrong class is greater than 1
     # add that to the total loss/'badness' of the data.
+
+    # https://github.com/lightaime/cs231n/blob/master/assignment1/cs231n/classifiers/linear_svm.py
+    # http://cs231n.github.io/optimization-1/#gradcompute for explanation
+    # tldr; if we take the gradient of W (slope towards the right direction)
+    # we take the partial derivatives/Jacobian
+    # this is w_1, w_2, ... w_10 for each class. (10 dimensions)
+    # but there are basically two possibilities: w_i (correct) or w_j (incorrect)
+    # so we get (del) df/dw_j = x_i and df/dw_i = -x_i
+    # dW, the slope, is the gradient * function itself, so we get
+    # that dW should be the slope of each training image towards the right direction.
     for j in range(num_classes):
       if j == y[i]:
         continue
       margin = scores[j] - correct_class_score + 1 # note delta = 1
       if margin > 0:
-        # https://github.com/lightaime/cs231n/blob/master/assignment1/cs231n/classifiers/linear_svm.py
-        # not too sure how adding the image to the derivative matrix results in
-        # the overall gradient--some Matrix Calculus thing I don't understand?
         loss += margin
+        # add -x_i to the correct column and x_i to the incorrect column if margin > 0
         dW[:,j] += X[i].T
         dW[:,y[i]] += -X[i].T
 
@@ -57,16 +65,6 @@ def svm_loss_naive(W, X, y, reg):
   # Add regularization to the loss.
   loss += reg * np.sum(W * W)
   dW += reg * W
-
-  #############################################################################
-  # TODO:                                                                     #
-  # Compute the gradient of the loss function and store it dW.                #
-  # Rather that first computing the loss and then computing the derivative,   #
-  # it may be simpler to compute the derivative at the same time that the     #
-  # loss is being computed. As a result you may need to modify some of the    #
-  # code above to compute the gradient.                                       #
-  #############################################################################
-
 
   return loss, dW
 
@@ -80,16 +78,34 @@ def svm_loss_vectorized(W, X, y, reg):
   loss = 0.0
   dW = np.zeros(W.shape) # initialize the gradient as zero
 
-  #############################################################################
-  # TODO:                                                                     #
-  # Implement a vectorized version of the structured SVM loss, storing the    #
-  # result in loss.                                                           #
-  #############################################################################
-  pass
-  #############################################################################
-  #                             END OF YOUR CODE                              #
-  #############################################################################
+  num_train = X.shape[0]
+  num_classes = W.shape[1]
 
+  # compte the score for picture in being each class.
+  scores = X.dot(W) # 500x3072 * 3072 * 10 = 500x10
+  # get the correct class score for each training example
+  correct_class_scores = []
+  for i in range(num_train):
+      correct_class_scores.append(np.array([scores[i][y[i]]]))
+  correct_class_scores = np.array(correct_class_scores)
+
+  margins = np.maximum(0, scores - correct_class_scores + 1)
+  for i in range(num_train):
+      margins[i][y[i]] = 0
+  # loss over entire data
+  loss = np.sum(margins) / num_train
+  # loss with regularization (this is tiny )
+  loss += reg * np.sum(W * W)
+
+  # https://github.com/lightaime/cs231n/blob/master/assignment1/cs231n/classifiers/linear_svm.py
+  # printing out the output of dW[0] on each iteration of the naiive helps
+  # this make sense.
+  coeff_mat = np.zeros((num_train, num_classes))
+  coeff_mat[margins > 0] = 1
+  coeff_mat[range(num_train), list(y)] = 0
+  coeff_mat[range(num_train), list(y)] = -np.sum(coeff_mat, axis=1)
+
+  dW = X.T.dot(coeff_mat) / num_train + reg * W
 
   #############################################################################
   # TODO:                                                                     #
