@@ -76,7 +76,7 @@ class LinearClassifier(object):
       class.
     """
     y_pred = np.zeros(X.shape[0])
-    
+
     scores = X.dot(self.W)
     y_pred = np.argmax(scores, axis=1)
     return y_pred
